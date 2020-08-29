@@ -29,6 +29,19 @@ def bot_command(command_handler):
     return wrapper
 
 
+@bot_command
+def help_command(update: telegram.Update,
+                 context: telegram.ext.CallbackContext):
+    update.message.reply_text(os.linesep.join(s.lstrip() for s in """
+        Клан умеет исполнять следующие команды:
+        
+        /help -- выводит данное описание команд
+        /klan msg -- клан отвечает на сообщение msg
+        /random -- клан отвечает рандомной фразой из гугл таблиц
+        /sticker -- клан отвечает рандомным стикером из стикерпака "Тодд Этот"
+    """.splitlines()))
+
+
 def initialize_sheets_service():
     creds = ServiceAccountCredentials.from_json_keyfile_name(
         'creds.json',
@@ -129,20 +142,6 @@ def main():
         updater = telegram.ext.Updater(f.read(), use_context=True)
 
     dp: telegram.ext.Dispatcher = updater.dispatcher
-
-    @bot_command
-    def help_command(update: telegram.Update, context):
-        update.message.reply_text(os.linesep.join(s.lstrip() for s in """
-            Код клана можно найти по ссылке
-            https://github.com/AdvancerMan/klanick-bot 
-            
-            Клан умеет исполнять следующие команды:
-            
-            /help -- выводит данное описание команд
-            /klan msg -- клан отвечает на сообщение msg
-            /random -- клан отвечает рандомной фразой из гугл таблиц
-            /sticker -- клан отвечает рандомным стикером из стикерпака "Тодд Этот"
-        """.splitlines()))
 
     dp.add_handler(telegram.ext.CommandHandler("help", help_command))
     dp.add_handler(telegram.ext.CommandHandler("klan", klan_message_handler))
