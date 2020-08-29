@@ -13,6 +13,8 @@ import telegram.ext
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+import requests
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO)
@@ -83,6 +85,22 @@ get_todd_etot_sticker_set = create_memoized_get(
     60
 )
 
+def get_memes():
+    s = requests.session()
+    r = s.get('https://www.google.ru/search?q=dank+memes&tbm=isch')
+    #print(r.text)
+    urls = []
+    for i in range(len(r.text)):
+        if r.text[i:i+3] == 'src':
+            j = i + 5
+            currurl = ""
+            while r.text[j] != '"':
+                currurl += r.text[j]
+                j += 1
+            urls.append(currurl)
+    #print(len(urls))
+    return urls
+
 
 def make_message_handler(*reply_functions):
     def handle(update: telegram.Update, context: telegram.ext.CallbackContext):
@@ -113,6 +131,13 @@ def random_todd_etot_sticker(update, context, message):
 
 
 random_sticker_handler = make_message_handler(random_todd_etot_sticker)
+
+
+def random_dank_meme(*args):
+    return [("reply_photo", random.choice(get_memes()))]
+
+
+random_meme_handler = make_message_handler(random_dank_meme)
 
 
 def random_reply(*reply_functions_and_probas):
@@ -149,6 +174,8 @@ def main():
         telegram.ext.CommandHandler("random", random_message_handler))
     dp.add_handler(
         telegram.ext.CommandHandler("sticker", random_sticker_handler))
+    dp.add_handler(
+        telegram.ext.CommandHandler("meme", random_meme_handler))
 
     dp.add_handler(telegram.ext.MessageHandler(
         telegram.ext.Filters.all & ~telegram.ext.Filters.command,
