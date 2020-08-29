@@ -5,6 +5,7 @@
 import logging
 import random
 import time
+import os
 
 import telegram
 import telegram.ext
@@ -29,14 +30,16 @@ def bot_command(command_handler):
 
 
 @bot_command
-def start(update: telegram.Update, context: telegram.ext.CallbackContext):
-    update.message.reply_text('Я говорю тебе... Привеееееет)')
-
-
-@bot_command
 def help_command(update: telegram.Update,
                  context: telegram.ext.CallbackContext):
-    update.message.reply_text("Эээээээто секрет!")
+    update.message.reply_text(os.linesep.join(s.lstrip() for s in """
+        Клан умеет исполнять следующие команды:
+        
+        /help -- выводит данное описание команд
+        /klan msg -- клан отвечает на сообщение msg
+        /random -- клан отвечает рандомной фразой из гугл таблиц
+        /sticker -- клан отвечает рандомным стикером из стикерпака "Тодд Этот"
+    """.splitlines()))
 
 
 def initialize_sheets_service():
@@ -140,7 +143,6 @@ def main():
 
     dp: telegram.ext.Dispatcher = updater.dispatcher
 
-    dp.add_handler(telegram.ext.CommandHandler("start", start))
     dp.add_handler(telegram.ext.CommandHandler("help", help_command))
     dp.add_handler(telegram.ext.CommandHandler("klan", klan_message_handler))
     dp.add_handler(
