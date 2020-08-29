@@ -85,21 +85,28 @@ get_todd_etot_sticker_set = create_memoized_get(
     60
 )
 
+
 def get_memes():
     s = requests.session()
-    r = s.get('https://www.google.ru/search?q=dank+memes&tbm=isch')
+    r = s.get('https://yandex.ru/images/search?from=tabbar&text=meme')
     #print(r.text)
     urls = []
-    for i in range(len(r.text)):
-        if r.text[i:i+3] == 'src':
-            j = i + 5
+    for i in range(len(r.text) // 2, len(r.text)):
+        if r.text[i:i+4] == '.jpg':
+            j = i + 3
             currurl = ""
             while r.text[j] != '"':
                 currurl += r.text[j]
-                j += 1
-            urls.append(currurl)
+                j -= 1
+            currurl = currurl[::-1]
+            if (currurl[0] + currurl[1] + currurl[2] + currurl[3] != '/ima'):
+                urls.append(currurl)
     #print(len(urls))
+    #print(urls)
     return urls
+
+
+get_memes_memoized = create_memoized_get("Parsing memes", get_memes, 3600)
 
 
 def make_message_handler(*reply_functions):
@@ -134,7 +141,7 @@ random_sticker_handler = make_message_handler(random_todd_etot_sticker)
 
 
 def random_dank_meme(*args):
-    return [("reply_photo", random.choice(get_memes()))]
+    return [("reply_photo", random.choice(get_memes_memoized()))]
 
 
 random_meme_handler = make_message_handler(random_dank_meme)
