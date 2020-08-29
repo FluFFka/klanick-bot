@@ -49,27 +49,36 @@ def initialize_sheets_service():
     return gspread.authorize(creds)
 
 
-ANSWERS_UPDATE_TIME = 5
-last_answers_update = None
-answers = []
+def create_memoized_get(update_message, update, update_time=5):
+    last_update = None
+    answer = None
+
+    def memoized_get(*args):
+        nonlocal last_update, answer
+
+        now = time.time()
+        since_last_update = now - last_update \
+            if last_update is not None else update_time
+
+        if since_last_update >= update_time:
+            logging.info(update_message)
+            last_update = now
+            answer = update(*args)
+        return answer
+
+    return memoized_get
 
 
-def get_answers(service):
-    global last_answers_update, answers
+get_answers = create_memoized_get(
+    "Updating answers from google spreadsheet",
+    lambda service: service.open('Кланик бот').sheet1.col_values(1)
+)
 
-    now = time.time()
-    since_last_update = now - last_answers_update \
-        if last_answers_update is not None else ANSWERS_UPDATE_TIME
-
-    if since_last_update >= ANSWERS_UPDATE_TIME:
-        logging.info("Updating answers from google spreadsheet")
-        last_answers_update = now
-        answers = service.open('Кланик бот').sheet1.col_values(1)
-    return answers
-
-
-def get_todd_etot_sticker_set(bot):
-    return bot.getStickerSet("ToddEtot")
+get_todd_etot_sticker_set = create_memoized_get(
+    "Updating sticker set",
+    lambda bot: bot.getStickerSet("ToddEtot"),
+    60
+)
 
 
 def make_message_handler(*reply_functions):
